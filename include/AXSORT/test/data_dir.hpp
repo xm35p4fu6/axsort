@@ -2,7 +2,7 @@
 #include <boost/dll/runtime_symbol_info.hpp>
 #include <boost/filesystem.hpp>
 
-namespace axsort namespace test {
+namespace axsort {namespace test {
 
 boost::filesystem::path get_executable_path()
 {
