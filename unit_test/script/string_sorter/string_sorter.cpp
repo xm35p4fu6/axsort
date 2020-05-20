@@ -32,12 +32,35 @@ void print_answer(std::string_view s, const std::vector<int>& v)
     for(int i : v) std::cout << i << " " << s.substr(i) << "\n";
 }
 
+template<typename SEQ, typename RES>
+void get_result(SEQ&& str, RES&& res)
+{
+    AXSORT::string_sorter::sais sorter;
+    sorter.sort(str, res);
+}
+
+template<typename SEQ1, typename SEQ2>
+void chk_result(SEQ1&& res, SEQ2&& ans)
+{
+    auto N = res.size();
+    auto M = ans.size();
+    assert(N == M);
+    for(decltype(N) i=0; i<N; ++i)
+        assert(res[i] == ans[i]);
+    std::cout << "check answer correct done\n";
+}
+
 int main()
 {
     std::string str;
-    std::vector<int> sa;
+    std::vector<int> sa, res;
 
     get_string_data(str);
     get_answer(str, sa);
-    print_answer(str, sa);
+    //print_answer(str, sa);
+
+    res.resize(sa.size()); // allocate mem 
+    get_result(str, res);
+    
+    chk_result(res, sa);
 }
