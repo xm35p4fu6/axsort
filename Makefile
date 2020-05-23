@@ -2,6 +2,7 @@ link_library = -lboost_filesystem -lboost_system -ldl -lgtest -lpthread
 include_dirs = ../include
 
 source_library = ../unit_test/script
+bowtie2_library = ../unit_test/bowtie2
 Cflag= -Wall -std=c++17 -I $(include_dirs) $(link_library)
 
 all:
@@ -23,3 +24,7 @@ sample: $(source_library)/sample_test.cpp
 string_sorter: $(source_library)/string_sorter/string_sorter.cpp
 	g++ $(source_library)/$@/$@.cpp $(Cflag) -o $@
 
+
+# TARGET seed_extraction
+seed_extraction: $(bowtie2_library)/seed_extraction.cpp
+	g++ $< $(Cflag) -o $@
