@@ -28,3 +28,7 @@ string_sorter: $(source_library)/string_sorter/string_sorter.cpp
 # TARGET seed_extraction
 seed_extraction: $(bowtie2_library)/seed_extraction.cpp
 	g++ $< $(Cflag) -o $@
+
+# TARGET fm_index
+fm_index: $(bowtie2_library)/fm_index.cpp
+	g++ $< $(Cflag) -o $@
