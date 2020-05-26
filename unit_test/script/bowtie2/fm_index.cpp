@@ -1,4 +1,4 @@
-#include <AXSORT/test/aligner.hpp>
+#include <AXSORT/aligner/aligner.hpp>
 #include <AXSORT/test/gtest.hpp>
 #include <AXSORT/test/data_dir.hpp>
 

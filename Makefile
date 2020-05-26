@@ -2,7 +2,7 @@ link_library = -lboost_filesystem -lboost_system -ldl -lgtest -lpthread
 include_dirs = ../include
 
 source_library = ../unit_test/script
-bowtie2_library = ../unit_test/bowtie2
+bowtie2_library = ../unit_test/script/bowtie2
 Cflag= -Wall -std=c++17 -I $(include_dirs) $(link_library)
 
 all:
