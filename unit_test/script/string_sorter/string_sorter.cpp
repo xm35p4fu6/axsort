@@ -1,6 +1,7 @@
-#include <iostream>
 #include <AXSORT/test/data_dir.hpp>
+#include <AXSORT/test/gtest.hpp>
 #include <AXSORT/string_sorter/sais.hpp>
+#include <iostream>
 #include <string_view>
 #include <numeric>
 
@@ -39,28 +40,18 @@ void get_result(SEQ&& str, RES&& res)
     sorter.sort(str, res);
 }
 
-template<typename SEQ1, typename SEQ2>
-void chk_result(SEQ1&& res, SEQ2&& ans)
-{
-    auto N = res.size();
-    auto M = ans.size();
-    assert(N == M);
-    for(decltype(N) i=0; i<N; ++i)
-        assert(res[i] == ans[i]);
-    std::cout << "check answer correct done\n";
-}
-
-int main()
+TEST(sais, check_answer)
 {
     std::string str;
     std::vector<int> sa, res;
 
     get_string_data(str);
+
+    res.resize(sa.size()); // allocate memory for sais
     get_answer(str, sa);
     //print_answer(str, sa);
 
-    res.resize(sa.size()); // allocate mem 
     get_result(str, res);
     
-    chk_result(res, sa);
+    EXPECT_EQ(res, sa);
 }
