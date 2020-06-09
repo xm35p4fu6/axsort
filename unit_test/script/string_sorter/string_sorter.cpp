@@ -4,54 +4,78 @@
 #include <iostream>
 #include <string_view>
 #include <numeric>
+#include <vector>
+#include <iterator>
+#include <iomanip>
 
 std::string get_data(std::string filename)
 {
     return (axsort::test::data_dir() / filename).string();
 }
 
-void get_string_data(std::string& s)
+template<typename T>
+void get_strings(T& strs)
 {
-    std::ifstream fin(get_data("string0"));
+    std::ifstream fin(get_data("string"));
     assert(fin.is_open());
-    fin >> s;
+    std::copy(std::istream_iterator<std::string>(fin), 
+              std::istream_iterator<std::string>(),
+              std::back_inserter(strs));
 }
 
-void get_answer(std::string_view s, std::vector<int>& sa)
+template<typename T1, typename T2>
+void get_answers(T1 strs, T2& answers)
 {
-    sa.resize(s.length());
-    std::iota(sa.begin(), sa.end(), 0);
-    std::sort(sa.begin(), sa.end(), [&](int a, int b)
-        {
-           return s.substr(a) < s.substr(b); 
-        });
+    answers.clear();
+    std::for_each(strs.begin(), strs.end(), [&](auto s)
+            {
+                answers.emplace_back(s.length());
+                auto& ans = answers.back();
+                std::iota(ans.begin(), ans.end(), 0);
+                std::sort(ans.begin(), ans.end(), [&](int a, int b)
+                        {
+                            return s.substr(a) < s.substr(b);
+                        });
+            });
 }
 
-void print_answer(std::string_view s, const std::vector<int>& v)
+template<typename T1, typename T2>
+void print_answer(T1 strs, T2& answers)
 {
-    std::cout << s << std::endl;
-    for(int i : v) std::cout << i << " " << s.substr(i) << "\n";
+    for(size_t i=0; i<strs.size(); ++i)
+    {
+        for(auto c : strs[i]) std::cout << std::setw(2) << c << " ";
+        std::cout << "\n";
+        for(auto c : answers[i]) std::cout << std::setw(2) << c << " ";
+        std::cout << "\n";
+    }
 }
 
-template<typename SEQ, typename RES>
-void get_result(SEQ&& str, RES&& res)
+template<typename T1, typename T2>
+void get_result(T1& strs, T2& ress)
 {
     AXSORT::string_sorter::sais sorter;
-    sorter.sort(str, res);
+
+    ress.resize(strs.size());
+    for(size_t i=0; i<strs.size(); ++i)
+    {
+        ress[i].resize(strs[i].size());
+        sorter.sort(strs[i], ress[i]);
+    }
 }
 
-TEST(sais, check_answer)
+TEST(sais, check_answers)   // multi-testcase
 {
-    std::string str;
-    std::vector<int> sa, res;
+    std::vector<std::string> strs;
+    std::vector<std::vector<int>> anss, ress;
 
-    get_string_data(str);
+    get_strings(strs);
+    std::vector<std::string_view> strs_view(strs.begin(), strs.end());
 
-    res.resize(sa.size()); // allocate memory for sais
-    get_answer(str, sa);
-    //print_answer(str, sa);
+    get_answers(strs_view, anss);
+    print_answer(strs_view, anss);
 
-    get_result(str, res);
+    get_result(strs, ress);
     
-    EXPECT_EQ(res, sa);
+    EXPECT_EQ(ress, anss);
 }
