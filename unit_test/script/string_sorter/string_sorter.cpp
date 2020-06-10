@@ -73,7 +73,7 @@ TEST(sais, check_answers)   // multi-testcase
     std::vector<std::string_view> strs_view(strs.begin(), strs.end());
 
     get_answers(strs_view, anss);
-    print_answer(strs_view, anss);
+    //print_answer(strs_view, anss);
 
     get_result(strs, ress);
     

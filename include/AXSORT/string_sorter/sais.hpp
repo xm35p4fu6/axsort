@@ -3,7 +3,7 @@
 #include <vector>
 #include <array>
 #include <limits>
-//#include <span>
+#include <span>
 
 namespace AXSORT { namespace string_sorter {
 
@@ -43,7 +43,8 @@ class sais
     template<typename SEQ, typename RES, typename CFG = default_config<SEQ, RES>>
     void sort(SEQ&& seq, RES&& res, CFG cfg = CFG())
     {
-        if(cfg.sequence_length == 0) cfg.sequence_length = seq.size();
+        if(cfg.sequence_length == 0) 
+            cfg.sequence_length = seq.size();
         sa_is(seq, res, cfg);
     }
 
@@ -51,7 +52,8 @@ class sais
     template<typename SEQ, typename INDEX_T>
     void sequence_check(SEQ&& seq, INDEX_T N)
     {
-        for(INDEX_T i(0); i+1<N; ++i) assert(seq[i] > seq[N-1]);
+        for(INDEX_T i(0); i+1<N; ++i) 
+            assert(seq[i] > seq[N-1]);
     }
 
     template<typename SEQ, typename ISL, typename IDX>
@@ -60,6 +62,8 @@ class sais
     template<typename SEQ, typename RES, typename CFG_>
     void sa_is(SEQ&&, RES&&, CFG_&& cfg = CFG_());
 
+    template<typename SEQ, typename ISL, typename CFG>
+    void cal_LS_type(SEQ&&, ISL&&, CFG&&);
 };
 
 template<typename SEQ, typename ISL, typename IDX>
@@ -89,6 +93,29 @@ bool sais::same_LMS_substr(SEQ&& seq, ISL&& is_L, IDX s1, IDX s2)
     return !start_L;
 }
 
+template<typename SEQ, typename ISL, typename CFG>
+inline void sais::cal_LS_type(SEQ&& seq, ISL&& IS_L, CFG&& cfg)
+{
+    using idx_t = decltype(cfg.sequence_length);
+
+    auto is_L = [&IS_L, &cfg](idx_t i) 
+        -> std::remove_reference<ISL>::type::reference {
+        //-> std::remove_reference<ISL>::type::value_type& {
+        // control assertion on/off
+        if constexpr (cfg.assertion) 
+            return IS_L.at(i);
+        else
+            return IS_L[i];
+    };
+
+    for(idx_t i = cfg.sequence_length-1; i>0; --i)
+    {  // cal L/S-type
+        if(seq[i-1] == seq[i]) is_L(i-1) = is_L(i);
+        // is_L[i-i] = is_L[i];
+        else is_L(i-1) = seq[i-1] > seq[i];
+    }
+}
+
 template<
     typename SEQ
   , typename RES
@@ -111,11 +138,8 @@ void sais::sa_is(
 
     if constexpr (CFG::assertion) 
         sequence_check(seq, len);
-    for(idx_t i = len-1; i>0; --i)
-    {  // cal L/S-type
-        if(seq[i-1] == seq[i]) is_L.at(i-1) = is_L.at(i);
-        else is_L.at(i-1) = seq[i-1] > seq[i];
-    }
+
+    cal_LS_type(seq, is_L, cfg);
 
     // cal bucket info (S-type: end of bucket)
     for(idx_t i(0); i<len; ++i) ++bkt_cnt[cfg.map2idx(seq[i])];
@@ -194,10 +218,10 @@ void sais::sa_is(
         new_cfg.alphabet_size = rank+1;
         new_cfg.sequence_length = insert_pos;
         // if we decide that only accept type which suppose iterator
-        // std::span seq_(std::begin(res)+len-insert_pos, insert_pos);
-        // std::span res_(std::begin(res)+len-insert_pos*2, insert_pos);
-        val_t* seq_(&res[len-insert_pos]);
-        val_t* res_(&res[len-insert_pos*2]);
+         std::span seq_(std::begin(res)+len-insert_pos, insert_pos);
+         std::span res_(std::begin(res)+len-insert_pos*2, insert_pos);
+        //val_t* seq_(&res[len-insert_pos]);
+        //val_t* res_(&res[len-insert_pos*2]);
 
         sa_is(seq_, res_, new_cfg);
 
