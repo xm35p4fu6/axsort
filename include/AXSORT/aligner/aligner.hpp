@@ -1,6 +1,5 @@
 #pragma once
 #include "suffix_array/DC3.hpp"
-//#define k 256   // number of characters
 #define Z_tally 15     // tally table factor
 #define E_SA 5     // SA factor
 
@@ -18,12 +17,11 @@ class Aligner
         assert(str.length() != 0);
         
         vector<int> s(str.length());
-        for(int i = 0; i<str.length(); i++)
+        for(int i=0; i<str.length(); i++)
             s[i] = str[i];
         
         SA = DC3(s);
         
-
         // init L
         L.clear();
 
@@ -35,8 +33,8 @@ class Aligner
                 L += str[i-1];
         
         // shrink SA
-        int ll=0;
-        for(int i = 0; i< SA.size(); i+=E_SA)
+        int ll = 0;
+        for(int i = 0; i < SA.size(); i+=E_SA)
         {
             SA[ll++] = SA[i];
         }
@@ -44,12 +42,11 @@ class Aligner
         SA.resize(ll);
         SA.shrink_to_fit();
 
-
         // build tally table
         int tally_len = 1 + L.length()/Z_tally;
         if(L.length() % Z_tally == 0) tally_len--;
 
-        for(int j = 0; j < 256; j++)
+        for(int j=0; j<256; j++)
         {
             tally[j].resize( tally_len );
             tally[j].shrink_to_fit();
@@ -58,15 +55,14 @@ class Aligner
                 i = 0;
         }
 
-        tally[ L[0] ][0]++;
+        tally[L[0]][0]++;
 
-
-        for(int i = 1, ii = 1; i < L.length(); i++)
+        for(int i=1, ii=1; i<L.length(); i++)
         {
-            tally[ L[i] ][ii]++;
+            tally[L[i]][ii]++;
             if(i % Z_tally == 0)
             {
-                for(int j = 0; j < 256; j++)
+                for(int j=0; j<256; j++)
                     tally[j][ii] += tally[j][ii-1];
                 ii++;
                 if(ii == tally_len)
@@ -75,16 +71,16 @@ class Aligner
         }
         
         // init F
-        for(int i = 0; i<256; i++)
+        for(int i=0; i<256; i++)
         {
             F[i] = 0;
         }
 
         // build F
         for(int i : s)
-            F[i]++;
+            F[i] ++;
 
-        for(int i = 1; i<256; i++)
+        for(int i=1; i<256; i++)
         {
             F[i] += F[i-1];   // tail)
         }
@@ -98,8 +94,8 @@ class Aligner
         {
             ch = L[i];
             
-            s =  tally[ ch ][(i-1)/Z_tally];
-            s  += tally_offset(ch, i-1);
+            s =  tally[ch][(i-1)/Z_tally];
+            s += tally_offset(ch, i-1);
             
             i = F[ ch-1 ] + s;
             cnt++;
@@ -112,9 +108,9 @@ class Aligner
     int tally_offset(int ch, int i)
     {
         int r = i%Z_tally, off = 0;
-        int base = i-r+1;
-        for(int j = 0; j < r; j++)
-            if( ch == L[ base+j ])
+        int base = i - r + 1;
+        for(int j=0; j<r; j++)
+            if( ch == L[base+j])
                 off++;
         return off;
     }
@@ -127,8 +123,8 @@ class Aligner
         // [start, end) of F
         int f, ff;
 
-        f = F[ i-1 ] + a;
-        ff = F[ i-1 ] + b;
+        f = F[i-1] + a;
+        ff = F[i-1] + b;
 
         if( !(ff>f) )
             return {};
@@ -140,18 +136,16 @@ class Aligner
             
             return res;
         }
-            
 
         // str[I-1] range of a~b in L
         int s, ss;
-        s =  tally[ str[I-1] ][(f-1)/Z_tally];
-        ss = tally[ str[I-1] ][(ff-1)/Z_tally];
+        s =  tally[str[I-1]][(f-1)/Z_tally];
+        ss = tally[str[I-1]][(ff-1)/Z_tally];
 
         s  += tally_offset(str[I-1], f-1);
         ss += tally_offset(str[I-1], ff-1);
 
         return search(str, I-1, s, ss);
-
     }
 
     vector<int> query(string& str)
@@ -162,12 +156,12 @@ class Aligner
         // [start, end) of F
         int a, b;
          
-        a = F[ i-1 ];
-        b = F[ i ];
+        a = F[i-1];
+        b = F[i];
 
-        if( !(b>a) )
+        if(!(b > a))
             return {};
-        else if( I == 0)
+        else if(I == 0)
         {
             vector<int> res;
             for(int i = a; i < b; i++)
@@ -178,12 +172,11 @@ class Aligner
 
         // str[I-1] range of a~b in L
         int s, ss;
-        s =  tally[ str[I-1] ][(a-1)/Z_tally];
-        ss = tally[ str[I-1] ][(b-1)/Z_tally];
+        s = tally[str[I-1]][(a-1)/Z_tally];
+        ss = tally[str[I-1]][(b-1)/Z_tally];
 
-        s  += tally_offset(str[I-1], a-1);
+        s += tally_offset(str[I-1], a-1);
         ss += tally_offset(str[I-1], b-1);
-
 
         return search(str, I-1, s, ss);
     }
