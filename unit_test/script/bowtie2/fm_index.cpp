@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <string>
+#include <iostream>
 
 using namespace std;
 
@@ -19,16 +20,16 @@ string sequence()
 
 void print_result(Aligner& a, string& str, vector<string>& querys)
 {
-    
     for(string q: querys)
     {
         cout<<"search for \""<<q<<"\""<<endl;
+		cout<<"length \""<<q.length()<<"\""<<endl;
 
         auto v = a.query(q);
         
         cout<<v.size()<<endl;
         for(int i: v)
-            cout<<i<<": "<<str.substr(i, 20)<<endl;
+            cout<<i<<": "<<str.substr(i, q.length()+1)<<endl;
         cout<<endl;
     }
 }
@@ -66,7 +67,7 @@ vector<int> query(vector<int>& SA, string& str, string& q)
     }
     return res;
 }
-
+/*
 
 TEST(BWT, file1_normal)
 {
@@ -128,7 +129,7 @@ TEST(BWT, file1_boundary_case)
             
     }
 }
-
+*/
 TEST(BWT, file2)
 {
     std::ifstream ifs(sequence());
@@ -143,9 +144,8 @@ TEST(BWT, file2)
 
         str.push_back(0);
         Aligner a(str);
-        vector<string> querys = { "RQQ", "QDDRRNA", "CQ", 
-        "DAGCANEACDCCDNAECCGNRACACQAQQNRERCEGQGGNCQARADDQRDQNCNANRGACCQEANG",
-         "AN", "CCRDG", "NEEQ" }; 
+        vector<string> querys = { "QDDRRNA", "DAGCANEACDCCDNAECCGNRACACQAQQNRERCEGQGGNCQARADDQRDQNCNANRGACCQEANG",
+        "CCRDG", "NEEQ" }; 
         
         auto v = string_to_vector(str);
         auto sa = DC3(v);

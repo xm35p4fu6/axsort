@@ -3,7 +3,17 @@ include_dirs = ../include
 
 source_library = ../unit_test/script
 bowtie2_library = ../unit_test/script/bowtie2
+simd_library = ../include/AXSORT/aligner
 Cflag= -Wall -std=c++17 -I $(include_dirs) $(link_library)
+
+CXXFLAGS = -std=c++11 -march=native -Wall
+
+DEBUG ?= 0
+ifeq ($(DEBUG), 1)
+	CXXFLAGS += -g -fno-omit-frame-pointer
+else
+	CXXFLAGS += -O3
+endif
 
 all:
 	echo "hahaha"
@@ -32,3 +42,13 @@ seed_extraction: $(bowtie2_library)/seed_extraction.cpp
 # TARGET fm_index
 fm_index: $(bowtie2_library)/fm_index.cpp
 	g++ $< $(Cflag) -o $@
+
+# TARGERT simd_aligner
+simd_aligner: $(simd_library)/opal.o $(simd_library)/ScoreMatrix.o $(simd_library)/simd_aligner.cpp
+	g++ $(CXXFLAGS) $(simd_library)/opal.o $(simd_library)/ScoreMatrix.o $(simd_library)/simd_aligner.cpp -o $@
+	
+ScoreMatrix.o: $(simd_library)/ScoreMatrix.cpp $(simd_library)/ScoreMatrix.hpp
+	g++ $(CXXFLAGS) -c $(simd_library)/ScoreMatrix.cpp
+
+opal.o: $(simd_library)/opal.cpp $(simd_library)/opal.h
+	g++ $(CXXFLAGS) -c $(simd_library)/opal.cpp	
