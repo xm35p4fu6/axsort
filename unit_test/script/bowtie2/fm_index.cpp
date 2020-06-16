@@ -144,8 +144,7 @@ TEST(BWT, file2)
 
         str.push_back(0);
         Aligner a(str);
-        vector<string> querys = { "QDDRRNA", "DAGCANEACDCCDNAECCGNRACACQAQQNRERCEGQGGNCQARADDQRDQNCNANRGACCQEANG",
-        "CCRDG", "NEEQ" }; 
+        vector<string> querys = { "QDDRRNA"}; 
         
         auto v = string_to_vector(str);
         auto sa = DC3(v);

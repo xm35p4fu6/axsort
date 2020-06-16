@@ -8,10 +8,69 @@
 #include <climits>
 #include<iostream>
 
-#include "opal.h"
-#include "ScoreMatrix.hpp"
+#include <AXSORT/aligner/opal.h>
+#include <AXSORT/aligner/ScoreMatrix.hpp>
+
+#include <AXSORT/aligner/aligner.hpp>
+//#include <AXSORT/test/gtest.hpp>
+//#include <AXSORT/test/data_dir.hpp>
+
+#include <fstream>
 
 using namespace std;
+
+//-------------FM-index functions----------------------------------//
+
+void print_result(Aligner& a, string& str, vector<string>& querys)
+{
+    for(string q: querys)
+    {
+        cout<<"search for \""<<q<<"\""<<endl;
+		cout<<"length \""<<q.length()<<"\""<<endl;
+
+        auto v = a.query(q);
+        
+        cout<<v.size()<<endl;
+        for(int i: v)
+            cout<<i<<": "<<str.substr(i, q.length()+1)<<endl;
+        cout<<endl;
+    }
+}
+
+vector<int> string_to_vector(string& str)
+{   
+    vector<int> s(str.length());
+    for(int i = 0; i<str.length(); i++)
+        s[i] = str[i];
+    return s;
+}
+
+vector<int> query(vector<int>& SA, string& str, string& q)
+{
+    vector<int> res;
+    int l = str.length();
+    int ll = q.length();
+
+    for(auto i: SA)
+    {
+        bool diff = false;
+
+        for(int d = 0; d<l; d++)
+        {
+            if(i+d==l || d == ll)
+                break;
+            else if( str[i+d] != q[d])
+            {
+                diff = true;
+                break;
+            }
+        }
+        if(!diff)
+            res.push_back(i);
+    }
+    return res;
+}
+//-----------------------------------------------------------//
 
 bool readFastaSequences(FILE* &file, unsigned char* alphabet, int alphabetLength, vector< vector<unsigned char> >* seqs);
 void printAlignment(const unsigned char* query, const int queryLength,
@@ -42,27 +101,7 @@ int main(int argc, char * const argv[]) {
         case 'x': searchType = atoi(optarg); break;
         }
     }
-	/*
-    if (optind + 2 != argc) {
-        fprintf(stderr, "\n");
-        fprintf(stderr, "Usage: opal_aligner [options...] <query.fasta> <db.fasta>\n");
-        fprintf(stderr, "Options:\n");
-        fprintf(stderr, "  -g N  N is gap opening penalty. [default: 3]\n");
-        fprintf(stderr, "  -e N  N is gap extension penalty. [default: 1]\n"
-                        "    Gap of length n will have penalty of g + (n - 1) * e.\n");
-        fprintf(stderr, "  -m Blosum50  Score matrix to be used. [default: Blosum50]\n");
-        fprintf(stderr, "  -f FILE  FILE contains score matrix and some additional data. Overrides -m.\n");
-        fprintf(stderr, "  -s  If set, there will be no score output (silent mode).\n");
-        fprintf(stderr, "  -a SW|NW|HW|OV  Alignment mode that will be used. [default: SW]\n");
-        fprintf(stderr,
-                "  -x search_level  Following search levels are available [default: %d]:\n"
-                "    %d - score\n"
-                "    %d - score, end location\n"
-                "    %d - score, end and start location and alignment\n",
-                OPAL_SEARCH_SCORE, OPAL_SEARCH_SCORE, OPAL_SEARCH_SCORE_END, OPAL_SEARCH_ALIGNMENT);
-        return 1;
-    }
-	*/
+
     //-------------------------------------------------------------------------//
 
     // Set score matrix by name
@@ -81,20 +120,7 @@ int main(int argc, char * const argv[]) {
     int alphabetLength = scoreMatrix.getAlphabetLength();
 
     // Detect mode
-    int modeCode;
-    if (!strcmp(mode, "SW"))
-        modeCode = OPAL_MODE_SW;
-    else if (!strcmp(mode, "HW"))
-        modeCode = OPAL_MODE_HW;
-    else if (!strcmp(mode, "NW"))
-        modeCode = OPAL_MODE_NW;
-    else if (!strcmp(mode, "OV"))
-        modeCode = OPAL_MODE_OV;
-    else {
-        printf("Invalid mode!\n");
-        return 1;
-    }
-    printf("Using %s alignment mode.\n", mode);
+    int modeCode = OPAL_MODE_SW;
 
     // Build query
     char* queryFilepath = "../unit_test/data/query_test1.fasta";//argv[optind];
@@ -216,9 +242,6 @@ int main(int argc, char * const argv[]) {
     return 0;
 }
 
-
-
-
 /** Reads sequences from fasta file. If it reads more than some amount of sequences, it will stop.
  * @param [in] file File pointer to database. It may not be the beginning of database.
  * @param [in] alphabet
@@ -274,6 +297,7 @@ bool readFastaSequences(FILE* &file, unsigned char* alphabet, int alphabetLength
                     }
 
                     seqs->back().push_back(letterIdx[c]);
+					cout << c;
 					
                 }
             }

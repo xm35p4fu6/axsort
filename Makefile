@@ -6,7 +6,7 @@ bowtie2_library = ../unit_test/script/bowtie2
 simd_library = ../include/AXSORT/aligner
 Cflag= -Wall -std=c++17 -I $(include_dirs) $(link_library)
 
-CXXFLAGS = -std=c++11 -march=native -Wall
+CXXFLAGS = -std=c++11 -march=native -Wall -I $(include_dirs) $(link_library)
 
 DEBUG ?= 0
 ifeq ($(DEBUG), 1)
@@ -44,8 +44,8 @@ fm_index: $(bowtie2_library)/fm_index.cpp
 	g++ $< $(Cflag) -o $@
 
 # TARGERT simd_aligner
-simd_aligner: $(simd_library)/opal.o $(simd_library)/ScoreMatrix.o $(simd_library)/simd_aligner.cpp
-	g++ $(CXXFLAGS) $(simd_library)/opal.o $(simd_library)/ScoreMatrix.o $(simd_library)/simd_aligner.cpp -o $@
+simd_aligner: $(simd_library)/opal.o $(simd_library)/ScoreMatrix.o $(bowtie2_library)/simd_aligner.cpp
+	g++ $(CXXFLAGS) $(simd_library)/opal.o $(simd_library)/ScoreMatrix.o $(bowtie2_library)/simd_aligner.cpp -o $@
 	
 ScoreMatrix.o: $(simd_library)/ScoreMatrix.cpp $(simd_library)/ScoreMatrix.hpp
 	g++ $(CXXFLAGS) -c $(simd_library)/ScoreMatrix.cpp
