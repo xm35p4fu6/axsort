@@ -17,6 +17,6 @@ sudo cp *.a /usr/lib
 $ mkdir build
 $ cd build
 $ cp ../Makefile .
-$ make sample
-$ ./sample
+$ make simd_aligner
+$ ./simd_aligner
 ```
