@@ -1,4 +1,5 @@
 #include <iostream>
+#include <AXSORT/aligner/seeds.hpp>
 #include <AXSORT/test/data_dir.hpp>
 #include <AXSORT/test/gtest.hpp>
 #include <string>
@@ -10,28 +11,6 @@ string input_read()
     return (axsort::test::data_dir() / "input_read").string();
 }
 
-string read_reverse(string read) {
-    reverse(read.begin(), read.end());
-    for(uint i = 0; i < read.length(); i++) {
-        switch (read[i]) {
-            case 'A':
-                read[i] = 'T';
-                break;
-            case 'C':
-                read[i] = 'G';
-                break;
-            case 'G':
-                read[i] = 'C';
-                break;
-            case 'T':
-                read[i] = 'A';
-                break;
-            default:
-                cout << "Only AGCT is supported!" << endl;
-        }
-    }
-    return read;
-}
 
 // need to finish implementation
 int32_t get_number_seed(string read, int32_t length, int32_t freq) {
@@ -48,7 +27,9 @@ TEST(ReadTest, CheckReadReverse)
 
     fin >> read;
 	
-	reverse = read_reverse(read);
+	Seeds s(read);
+	
+	reverse = s.read_reverse(read);//read_reverse(read);
 
     EXPECT_EQ(reverse_mock, reverse);
 }
