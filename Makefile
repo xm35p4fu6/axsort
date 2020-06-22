@@ -1,10 +1,15 @@
-link_library = -lboost_filesystem -lboost_system -ldl -lgtest -lpthread
+link_library = -lboost_filesystem -lboost_system -ldl -lgtest -lpthread -lprofiler
 include_dirs = ../include
 
 source_library = ../unit_test/script
+<<<<<<< HEAD
 bowtie2_library = ../unit_test/script/bowtie2
 simd_library = ../include/AXSORT/aligner
 Cflag= -Wall -std=c++17 -I $(include_dirs) $(link_library)
+=======
+Cflag = -Wall -std=c++2a -I $(include_dirs) $(link_library) -g
+Cflag_O2 = -Wall -std=c++2a -I $(include_dirs) $(link_library) -O2
+CC = g++-10
 
 CXXFLAGS = -std=c++11 -march=native -Wall -I $(include_dirs) $(link_library)
 
@@ -20,19 +25,20 @@ all:
 
 # TARGET test:  for convenience in build/
 test: test.cpp
-	g++ -std=c++17 test.cpp $(Cflag) -o $@
+	$(CC) -std=c++2a test.cpp $(Cflag) -o $@
 
 
 # TARGET sample: example.  
 # $< = first val after ':', that is, $(source_library)/sample_test.cpp
 sample: $(source_library)/sample_test.cpp
-	g++ $< $(Cflag) -o $@
+	$(CC) $< $(Cflag) -o $@
 
 
 # TARGET string_sorter: Xman's command. 
 # $@ = TARGET, that is, string_sorter
 string_sorter: $(source_library)/string_sorter/string_sorter.cpp
-	g++ $(source_library)/$@/$@.cpp $(Cflag) -o $@
+	$(CC) $(source_library)/$@/$@.cpp $(Cflag) -o $@
+	$(CC) $(source_library)/$@/$@.cpp $(Cflag_O2) -o $@_O2
 
 
 # TARGET seed_extraction
@@ -52,3 +58,8 @@ ScoreMatrix.o: $(simd_library)/ScoreMatrix.cpp $(simd_library)/ScoreMatrix.hpp
 
 opal.o: $(simd_library)/opal.cpp $(simd_library)/opal.h
 	g++ $(CXXFLAGS) -c $(simd_library)/opal.cpp	
+	
+fastq: $(source_library)/format/fastq_test.cpp
+	$(CC) $(source_library)/format/fastq_test.cpp $(Cflag) -o $@
+
+.PHONY: string_sorter
