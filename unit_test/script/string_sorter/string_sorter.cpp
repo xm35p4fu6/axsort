@@ -20,13 +20,20 @@ template<typename T>
 void get_strings(T& strs)
 {
     {
-        std::ifstream fin(get_data("chr.txt"));
+        std::ifstream fin(get_data("chr_1.txt"));
         assert(fin.is_open());
         std::copy(std::istream_iterator<std::string>(fin), 
                 std::istream_iterator<std::string>(),
                 std::back_inserter(strs));
     }
     /*
+    {
+        std::ifstream fin(get_data("chr.txt"));
+        assert(fin.is_open());
+        std::copy(std::istream_iterator<std::string>(fin), 
+                std::istream_iterator<std::string>(),
+                std::back_inserter(strs));
+    }
     {
         std::ifstream fin(get_data("b_string"));
         assert(fin.is_open());
@@ -107,18 +114,18 @@ void pre_process()
     std::cerr << "start getting reference string ... ";
     get_strings(strs);
     std::cerr << " done (";
-    for(auto& s : strs) std::cerr << s.length() << " ";
+    for(auto& s : strs) {
+        std::cerr << s.length() << " ";
+        std::cerr << "shrink to fit (string) ...\n";
+        s.shrink_to_fit();
+        std::cerr << "shrink to fit (string) ... done.\n";
+    }
     std::cerr << "\n";
 }
 
 
 TEST(sais, check_answers)   // multi-testcase
 {
-    //std::vector<std::string_view> strs_view(strs.begin(), strs.end());
-
-    //get_answers(strs_view, anss);
-    //print_answer(strs_view, anss);
-
     std::cerr << strs.size() << ":";
     for(auto& s : strs) std::cerr << s.length() << " ";
     std::cerr << "\n";
@@ -127,5 +134,8 @@ TEST(sais, check_answers)   // multi-testcase
     get_result(strs, ress);
     ProfilerStop();           // 结束profiling
     
+    //std::vector<std::string_view> strs_view(strs.begin(), strs.end());
+    //get_answers(strs_view, anss);
+    //print_answer(strs_view, anss);
     //EXPECT_EQ(ress, anss);
 }

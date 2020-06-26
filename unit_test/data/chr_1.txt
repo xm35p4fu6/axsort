@@ -1,0 +1,1 @@
+/home/nfs_home/xman/data/chr_1.txt

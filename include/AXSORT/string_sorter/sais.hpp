@@ -5,6 +5,7 @@
 #include <limits>
 #include <span>
 #include <ranges>
+#include <algorithm>
 
 namespace AXSORT { namespace string_sorter {
 
@@ -17,8 +18,6 @@ class sais
 {
   public:
 
-    // idx_type: use for implementation's for loop counter, can be unsigned
-    // val_type: can't be unsigned
     // assertion: open all assert() if true. useful for debug.
     // map2idx(): map the original sequence's character to bucket's index
     // map2val(): reverse of map2idx()
@@ -37,7 +36,7 @@ class sais
         inline bkt_idx_t map2idx(seq_val_t v) { return v; }
         inline seq_val_t map2val(bkt_idx_t v) { return v; }
 
-        static constexpr bool assertion = false;
+        static constexpr bool assertion = true;
         static constexpr auto empty =
             std::numeric_limits<res_val_t>::max();
 
@@ -50,7 +49,9 @@ class sais
     void sort(SEQ&& seq, RES&& res, CFG cfg = CFG())
     {
         if(cfg.sequence_length == 0) 
+        {
             cfg.sequence_length = seq.size();
+        }
         sais_impl::sa_is(seq, res, cfg);
     }
 
@@ -73,9 +74,6 @@ inline void cal_bucket_info(SEQ&&, BKT&&, CFG&&);
 template<Direction Dir, typename BKT, typename CFG>
 inline void cal_bucket_ptr(BKT&&, BKT&&, CFG&&);
 
-template<typename RES, typename CFG>
-inline void set_result_empty(RES&&, CFG&&);
-
 template <typename SEQ, typename RES, typename BKT
     , typename ISL, typename CFG>
 inline void put_LMSc(SEQ&&, RES&&, BKT&&, ISL&&, CFG&&);
@@ -97,6 +95,15 @@ inline void induce_sort(RES&&, SEQ&&, ISL&&, BKT&&, CFG&&);
 template<Direction Dir, typename RES, typename IDX, typename CFG_>
 inline void collect_element(RES&& res, IDX& len, CFG_&& cfg);
 
+template<typename RES, typename IDX, typename ISL, typename CFG_>
+inline void recursive_call_sais(RES&& res, ISL&& is_L
+        , IDX new_length, IDX new_alphabet, CFG_&& cfg);
+
+template<typename RES, typename SEQ, typename BKT, typename IDX
+    , typename CFG_>
+inline void put_LMS_sorted(RES&& res, SEQ&& seq, BKT&& ptr
+        , IDX&& len, CFG_&& cfg);
+
 template<typename SEQ, typename RES, typename CFG_>
 void sa_is(SEQ&& seq, RES&& res, CFG_&& cfg) 
 {
@@ -115,7 +122,7 @@ void sa_is(SEQ&& seq, RES&& res, CFG_&& cfg)
 
     cal_LS_type(seq, is_L, cfg);
     cal_bucket_info(seq, bkt_cnt, cfg);
-    set_result_empty(res, cfg);
+    std::fill(res.begin(), res.begin()+len, CFG::empty);
 
     cal_bucket_ptr<forward>(bkt_ptr, bkt_cnt, cfg);
     put_LMSc(seq, res, bkt_ptr, is_L, cfg);
@@ -133,75 +140,48 @@ void sa_is(SEQ&& seq, RES&& res, CFG_&& cfg)
 
     if(++rank < insert_pos)
     {   
-
-         std::span seq_(std::begin(res)+len-insert_pos, insert_pos);
-         std::span res_(std::begin(res)+len-insert_pos*2, insert_pos);
-
-if constexpr (CFG::assertion) 
-{
-    assert(insert_pos < len);
-    assert(seq_.size() == insert_pos);
-    assert(res_.size() == insert_pos);
-}
-        // generate cfg object
-        sais::default_config<decltype(seq_), decltype(res_)> new_cfg;
-        new_cfg.alphabet_size = rank;
-        new_cfg.sequence_length = insert_pos;
-
-        sa_is(seq_, res_, new_cfg);
-
-        for(idx_t i(len-1), j(0); j<insert_pos; --i)
-        {   // receive LMS-substr's positions
-            if constexpr (CFG::assertion)
-            {   // modify p_str
-                if(!is_L.at(i) && is_L.at(i-1))
-                    res[len-1-j++] = i;
-            }
-            else
-            {
-                if(!is_L[i] && is_L[i-1])
-                    res[len-1-j++] = i;
-            }
-        }
-
-        for(idx_t i(0); i<insert_pos; ++i)
-        {   // map index to original
-            res[i] = seq_[res_[i]];
-        }
+        recursive_call_sais(res, is_L, insert_pos, rank, cfg);
     }
 
     // clear bucket
-    for(idx_t i(insert_pos); i<len; ++i)
-        res[i] = CFG::empty;
+    std::fill(res.begin()+insert_pos, res.begin()+len, CFG::empty);
+    cal_bucket_ptr<forward>(bkt_ptr, bkt_cnt, cfg);
 
-    bkt_ptr[0] = bkt_cnt[0];
-    for(idx_t i(1); i<bkt_cnt.size(); ++i) 
-        bkt_ptr[i] = bkt_ptr[i-1] + bkt_cnt[i];
-
-    for(idx_t i(insert_pos); i>0; --i)
-    {   // put sorted LMS-suffix into bucket
-        res[--bkt_ptr[cfg.map2idx(seq[res[i-1]])]] = res[i-1];
-        if(bkt_ptr[cfg.map2idx(seq[res[i-1]])] != i-1)
-            res[i-1] = CFG::empty;
-    }
-
-    // bkt_ptr[0] = 0; // it is already = 0 
-    for(idx_t i(1); i<bkt_cnt.size(); ++i) 
-        bkt_ptr[i] = bkt_ptr[i-1] + bkt_cnt[i-1];
-
+    put_LMS_sorted(res, seq, bkt_ptr, insert_pos, cfg);
+    cal_bucket_ptr<backward>(bkt_ptr, bkt_cnt, cfg);
     induce_sort<induceL, suffix>(res, seq, is_L, bkt_ptr, cfg);
 
-    bkt_ptr[0] = bkt_cnt[0]; 
-    for(idx_t i(1); i<bkt_cnt.size(); ++i) 
-        bkt_ptr[i] = bkt_ptr[i-1] + bkt_cnt[i];
-
+    cal_bucket_ptr<forward>(bkt_ptr, bkt_cnt, cfg);
     induce_sort<induceS, suffix>(res, seq, is_L, bkt_ptr, cfg);
 }
 
+template<typename RES, typename SEQ, typename BKT, typename IDX
+    , typename CFG_>
+inline void put_LMS_sorted(RES&& res, SEQ&& seq, BKT&& ptr
+        , IDX&& len, CFG_&& cfg)
+{
+    using CFG = std::remove_reference<CFG_>::type;
+    using idx_t = IDX;
+
+    if constexpr (CFG::assertion)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
+    for(idx_t i(len); i>0; --i)
+    {   // put sorted LMS-suffix into bucket
+        res[--ptr[cfg.map2idx(seq[res[i-1]])]] = res[i-1];
+        if(ptr[cfg.map2idx(seq[res[i-1]])] != i-1)
+            res[i-1] = CFG::empty;
+    }
+}
 template<typename SEQ, typename CFG_>
 inline void sequence_check(SEQ&& seq, CFG_&& cfg)
 {
     using CFG = std::remove_reference<CFG_>::type;
+    if constexpr (CFG::assertion)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
     if constexpr (CFG::assertion)
     {
         assert(cfg.sequence_length <= CFG::empty || CFG::empty < 0);
@@ -269,6 +249,11 @@ inline void cal_LS_type(SEQ&& seq, ISL&& IS_L, CFG&& cfg)
             return IS_L[i];
     };
 
+    if constexpr (cfg.assertion)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
+
     for(idx_t i = cfg.sequence_length-1; i>0; --i)
     {  // cal L/S-type
         if(seq[i-1] == seq[i]) is_L(i-1) = is_L(i);
@@ -284,6 +269,10 @@ inline void put_LMSc(
       , ISL&& is_L, CFG&& cfg)
 {
     using idx_t = decltype(cfg.sequence_length);
+    if constexpr (cfg.assertion)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
     for(idx_t i(1); i<cfg.sequence_length; ++i) 
         if(!is_L[i] && is_L[i-1])
         {   // put LMS-character
@@ -295,6 +284,10 @@ template<Direction Dir, typename BKT, typename CFG>
 inline void cal_bucket_ptr(BKT&& ptr, BKT&& cnt, CFG&& cfg)
 {
     using idx_t = decltype(cfg.alphabet_size);
+    if constexpr (cfg.assertion)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
 
     if constexpr(Dir == forward)
         ptr[0] = cnt[0];
@@ -313,6 +306,10 @@ template<typename SEQ, typename BKT, typename CFG>
 inline void cal_bucket_info(SEQ&& seq_, BKT&& cnt_, CFG&& cfg)
 {
     using idx_t = decltype(cfg.sequence_length);
+    if constexpr (cfg.assertion)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
 
     auto seq = [&seq_, &cfg](idx_t i) 
         -> std::remove_reference<SEQ>::type::reference {
@@ -333,15 +330,6 @@ inline void cal_bucket_info(SEQ&& seq_, BKT&& cnt_, CFG&& cfg)
     for(idx_t i(0); i<cfg.sequence_length; ++i)
         ++cnt(cfg.map2idx(seq(i)));
 }
-template<typename RES, typename CFG>
-inline void set_result_empty(RES&& res, CFG&& cfg)
-{
-    using idx_t = decltype(cfg.sequence_length);
-    using CFG_ = std::remove_reference<CFG>::type;
-
-    for(idx_t i(0); i<cfg.sequence_length; ++i)
-        res[i] = CFG_::empty;
-}
 
 template<Induce LR, Target Tar, typename RES
     , typename SEQ, typename ISL, typename BKT, typename CFG>
@@ -349,6 +337,10 @@ inline void induce_sort(RES&& res
         , SEQ&& seq, ISL&& is_L, BKT&& ptr, CFG&& cfg)
 {
     using CFG_ = std::remove_reference<CFG>::type;
+    if constexpr (cfg.assertion)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
 
     auto view_res = 
         [&res]() {
@@ -387,6 +379,11 @@ template<Direction Dir, typename RES, typename IDX, typename CFG_>
 inline void collect_element(RES&& res, IDX& len, CFG_&& cfg)
 {
     using CFG = std::remove_reference<CFG_>::type;
+    if constexpr (cfg.assertion)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
+
     auto view_res = 
         [&res]() {
             if constexpr (Dir == forward)
@@ -420,6 +417,56 @@ inline void collect_element(RES&& res, IDX& len, CFG_&& cfg)
 
     }
     len = cnt;
+}
+template<typename RES, typename IDX, typename ISL, typename CFG_>
+inline void recursive_call_sais(RES&& res, ISL&& is_L
+        , IDX new_length, IDX new_alphabet, CFG_&& cfg)
+{
+    using idx_t = IDX;
+    using CFG = std::remove_reference<CFG_>::type;
+    if constexpr (cfg.assertion)
+    {
+        std::cerr << __PRETTY_FUNCTION__ << "\n";
+    }
+
+    auto len = cfg.sequence_length;
+
+    std::span seq_(std::begin(res)+len-new_length, new_length);
+    std::span res_(std::begin(res)+len-new_length*2, new_length);
+
+    if constexpr (CFG::assertion) 
+    {
+        assert(new_length < len);
+        assert(seq_.size() == new_length);
+        assert(res_.size() == new_length);
+    }
+
+    // generate cfg object
+    sais::default_config<decltype(seq_), decltype(res_)> new_cfg;
+    new_cfg.alphabet_size = new_alphabet;
+    new_cfg.sequence_length = new_length;
+
+    sa_is(seq_, res_, new_cfg);
+
+    for(idx_t i(len-1), j(0); j<new_length; --i)
+    {   // receive LMS-substr's positions
+        if constexpr (CFG::assertion)
+        {   // modify p_str
+            if(!is_L.at(i) && is_L.at(i-1))
+                res[len-1-j++] = i;
+        }
+        else
+        {
+            if(!is_L[i] && is_L[i-1])
+                res[len-1-j++] = i;
+        }
+    }
+
+    for(idx_t i(0); i<new_length; ++i)
+    {   // map index to original
+        res[i] = seq_[res_[i]];
+    }
+
 }
 
 }   // sais_impl
