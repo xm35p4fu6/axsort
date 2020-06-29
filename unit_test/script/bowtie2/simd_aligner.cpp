@@ -123,7 +123,7 @@ int main(int argc, char * const argv[]) {
     int modeCode = OPAL_MODE_SW;
 
     // Build query
-    char* queryFilepath = "../unit_test/data/query_test1.fasta";//argv[optind];
+    char* queryFilepath = "../unit_test/data/query.fasta";//argv[optind];
     FILE* queryFile = fopen(queryFilepath, "r");
     if (queryFile == 0) {
         printf("Error: There is no file with name %s\n", queryFilepath);
@@ -139,7 +139,7 @@ int main(int argc, char * const argv[]) {
 
 
     // Build db
-    char* dbFilepath = "../unit_test/data/db_test1.fasta";//argv[optind+1];
+    char* dbFilepath = "../unit_test/data/database.fasta";//argv[optind+1];
     FILE* dbFile = fopen(dbFilepath, "r");
     if (dbFile == 0) {
         printf("Error: There is no file with name %s\n", dbFilepath);

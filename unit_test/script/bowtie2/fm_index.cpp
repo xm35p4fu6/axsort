@@ -1,4 +1,5 @@
 #include <AXSORT/aligner/aligner.hpp>
+#include <AXSORT/aligner/seeds.hpp>
 #include <AXSORT/test/gtest.hpp>
 #include <AXSORT/test/data_dir.hpp>
 
@@ -24,18 +25,27 @@ string sequence()
 
 void print_result(Aligner& a, string& str, vector<string>& querys)
 {
+	ofstream fasta_database_file;
+	fasta_database_file.open((axsort::test::data_dir() /"database.fasta").string());
+	
     for(string q: querys)
     {
         cout<<"search for \""<<q<<"\""<<endl;
-		cout<<"length \""<<q.length()<<"\""<<endl;
 
         auto v = a.query(q);
-        
         cout<<v.size()<<endl;
         for(int i: v)
-            cout<<i<<": "<<str.substr(i, q.length()+1)<<endl;
+		{
+            cout<<i<<": "<<str.substr(i, q.length() + 1)<<endl;
+			if (v.size()>0)
+			{
+				fasta_database_file << ">" << i << "\n";
+				fasta_database_file <<str.substr(i, q.length() + 1) <<"\n";
+			}
+		}
         cout<<endl;
     }
+	fasta_database_file.close();
 }
 
 vector<int> string_to_vector(string& str)
@@ -71,13 +81,22 @@ vector<int> query(vector<int>& SA, string& str, string& q)
     }
     return res;
 }
-/*
 
-TEST(BWT, file1_normal)
+
+TEST(BWT, check_reverse)
 {
-    std::ifstream ifs(article());
-    string str;
-    
+	std::ifstream ifs(sequence());
+    string str, read, reverse;
+	read = "GAA";
+	reverse = read;
+	
+	Seeds s(reverse);
+
+	ofstream fasta_query_file;
+	fasta_query_file.open((axsort::test::data_dir() /"query.fasta").string());
+	fasta_query_file << ">query\n";
+	fasta_query_file << read << "\n";
+
     int c = 0;
 
     while(getline(ifs, str))
@@ -87,8 +106,12 @@ TEST(BWT, file1_normal)
 
         str.push_back(0);
         Aligner a(str);
-        vector<string> querys = { "t", "th", "the"};
-        
+        vector<string> querys;
+		
+		reverse = s.read_reverse(reverse);
+		querys.push_back(read);
+		querys.push_back(reverse);
+
         auto v = string_to_vector(str);
         auto sa = DC3(v);
 
@@ -102,7 +125,7 @@ TEST(BWT, file1_normal)
             
     }
 }
-
+/*
 TEST(BWT, file1_boundary_case)
 {
     std::ifstream ifs(article());
@@ -133,7 +156,7 @@ TEST(BWT, file1_boundary_case)
             
     }
 }
-*/
+
 TEST(BWT, file2)
 {
     std::ifstream ifs(sequence());
@@ -162,3 +185,4 @@ TEST(BWT, file2)
             
     }
 }
+*/
