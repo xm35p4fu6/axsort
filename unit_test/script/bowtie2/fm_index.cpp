@@ -8,6 +8,10 @@
 
 using namespace std;
 
+void pre_process()
+{
+}
+
 string article()
 {
     return (axsort::test::data_dir() / "article.txt").string();

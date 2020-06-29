@@ -6,6 +6,10 @@
 
 using namespace std;
 
+void pre_process()
+{
+}
+
 string input_read()
 {
     return (axsort::test::data_dir() / "input_read").string();

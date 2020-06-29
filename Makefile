@@ -2,13 +2,10 @@ link_library = -lboost_filesystem -lboost_system -ldl -lgtest -lpthread -lprofil
 include_dirs = ../include
 
 source_library = ../unit_test/script
-<<<<<<< HEAD
 bowtie2_library = ../unit_test/script/bowtie2
 simd_library = ../include/AXSORT/aligner
+
 Cflag= -Wall -std=c++17 -I $(include_dirs) $(link_library)
-=======
-Cflag = -Wall -std=c++2a -I $(include_dirs) $(link_library) -g
-Cflag_O2 = -Wall -std=c++2a -I $(include_dirs) $(link_library) -O2
 CC = g++-10
 
 CXXFLAGS = -std=c++11 -march=native -Wall -I $(include_dirs) $(link_library)
@@ -40,16 +37,17 @@ string_sorter: $(source_library)/string_sorter/string_sorter.cpp
 	$(CC) $(source_library)/$@/$@.cpp $(Cflag) -o $@
 	$(CC) $(source_library)/$@/$@.cpp $(Cflag_O2) -o $@_O2
 
-
 # TARGET seed_extraction
 seed_extraction: $(bowtie2_library)/seed_extraction.cpp
-	g++ $< $(Cflag) -o $@
+	$(CC) $(bowtie2_library)/$@.cpp $(Cflag) -o $@
 
 # TARGET fm_index
+# ALI
 fm_index: $(bowtie2_library)/fm_index.cpp
 	g++ $< $(Cflag) -o $@
 
 # TARGERT simd_aligner
+# ALI
 simd_aligner: $(simd_library)/opal.o $(simd_library)/ScoreMatrix.o $(bowtie2_library)/simd_aligner.cpp
 	g++ $(CXXFLAGS) $(simd_library)/opal.o $(simd_library)/ScoreMatrix.o $(bowtie2_library)/simd_aligner.cpp -o $@
 	
@@ -59,7 +57,4 @@ ScoreMatrix.o: $(simd_library)/ScoreMatrix.cpp $(simd_library)/ScoreMatrix.hpp
 opal.o: $(simd_library)/opal.cpp $(simd_library)/opal.h
 	g++ $(CXXFLAGS) -c $(simd_library)/opal.cpp	
 	
-fastq: $(source_library)/format/fastq_test.cpp
-	$(CC) $(source_library)/format/fastq_test.cpp $(Cflag) -o $@
-
 .PHONY: string_sorter

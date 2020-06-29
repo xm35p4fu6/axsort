@@ -2,6 +2,9 @@
 #include <AXSORT/test/data_dir.hpp>
 #include <AXSORT/test/gtest.hpp>
 
+void pre_process()
+{
+}
 std::string sample_data()
 {
     return (axsort::test::data_dir() / "sample_data").string();
