@@ -15,7 +15,6 @@ string input_read()
     return (axsort::test::data_dir() / "input_read").string();
 }
 
-
 // need to finish implementation
 int32_t get_number_seed(string read, int32_t length, int32_t freq) {
 	return 3;
@@ -33,7 +32,7 @@ TEST(ReadTest, CheckReadReverse)
 	
 	Seeds s(read);
 	
-	reverse = s.read_reverse(read);//read_reverse(read);
+	reverse = s.read_reverse(read);
 
     EXPECT_EQ(reverse_mock, reverse);
 }

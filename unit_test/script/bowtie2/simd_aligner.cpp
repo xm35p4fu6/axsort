@@ -12,8 +12,8 @@
 #include <AXSORT/aligner/ScoreMatrix.hpp>
 
 #include <AXSORT/aligner/aligner.hpp>
-//#include <AXSORT/test/gtest.hpp>
-//#include <AXSORT/test/data_dir.hpp>
+#include <AXSORT/aligner/seeds.hpp>
+
 
 #include <fstream>
 
@@ -21,20 +21,54 @@ using namespace std;
 
 //-------------FM-index functions----------------------------------//
 
-void print_result(Aligner& a, string& str, vector<string>& querys)
+void pre_process()
 {
+}
+
+string sequence()
+{
+    return ("../unit_test/data/sequence.txt");
+}
+
+vector<int> print_result(Aligner& a, string& str, vector<string>& querys)
+{
+	ofstream fasta_database_file;
+	fasta_database_file.open("../unit_test/data/database.fasta");
+	vector<int> indexes;
+	
     for(string q: querys)
     {
         cout<<"search for \""<<q<<"\""<<endl;
-		cout<<"length \""<<q.length()<<"\""<<endl;
 
         auto v = a.query(q);
-        
         cout<<v.size()<<endl;
         for(int i: v)
-            cout<<i<<": "<<str.substr(i, q.length()+1)<<endl;
+		{
+			if ((i - q.length() + 1) > 0)
+			{
+				cout<<i<<": "<<str.substr(i - q.length() + 1, 2 * q.length()-1)<<endl;				
+			}else
+			{
+				cout<<i<<": "<<str.substr(i, q.length())<<endl;								
+			}
+
+			if (v.size()>0)
+			{
+				fasta_database_file << ">" << i << "\n";
+				indexes.push_back(i);
+				if ((i - q.length() + 1) > 0)
+				{
+					fasta_database_file <<str.substr(i - q.length() + 1, 2 * q.length()-1) <<"\n";					
+				}else
+				{
+					fasta_database_file <<str.substr(i, q.length()) <<"\n";					
+				}
+			}
+		}
         cout<<endl;
     }
+	fasta_database_file.close();
+	return indexes;
 }
 
 vector<int> string_to_vector(string& str)
@@ -75,9 +109,47 @@ vector<int> query(vector<int>& SA, string& str, string& q)
 bool readFastaSequences(FILE* &file, unsigned char* alphabet, int alphabetLength, vector< vector<unsigned char> >* seqs);
 void printAlignment(const unsigned char* query, const int queryLength,
                     const unsigned char* target, const int targetLength,
-                    const OpalSearchResult result, const unsigned char* alphabet);
+                    const OpalSearchResult result, const unsigned char* alphabet, vector<int> indexes, int i);
 
-int main(int argc, char * const argv[]) {
+int main(int argc, char * const argv[]) 
+{
+	//----------------------------- FM-Index part -----------------------------//
+	vector<int> indexes;
+	ifstream ifs(sequence());
+    string str, read, reverse;
+	read = "GAA";
+	reverse = read;
+	
+	Seeds s(reverse);
+
+	ofstream fasta_query_file;
+	fasta_query_file.open("../unit_test/data/query.fasta");
+	fasta_query_file << ">query\n";
+	fasta_query_file << read << "\n";
+	fasta_query_file.close();
+
+    int c = 0;
+
+    while(getline(ifs, str))
+    {
+        cout<<"*************************************"<<endl;
+        cout<<str<<endl;
+
+        str.push_back(0);
+        Aligner a(str);
+        vector<string> querys;
+		
+		reverse = s.read_reverse(reverse);
+		querys.push_back(read);
+		querys.push_back(reverse);
+
+        auto v = string_to_vector(str);
+        auto sa = DC3(v);
+
+        indexes = print_result(a, str, querys);
+    }	
+    //-------------------------------------------------------------------------//
+	
     int gapOpen = 3;
     int gapExt = 1;
     ScoreMatrix scoreMatrix;
@@ -90,6 +162,7 @@ int main(int argc, char * const argv[]) {
     char mode[16] = "SW";
     int searchType = 2;//OPAL_SEARCH_SCORE;
     int option;
+	/*
     while ((option = getopt(argc, argv, "a:o:e:m:f:x:s")) >= 0) {
         switch (option) {
         case 'a': strcpy(mode, optarg); break;
@@ -100,7 +173,7 @@ int main(int argc, char * const argv[]) {
         case 's': silent = true; break;
         case 'x': searchType = atoi(optarg); break;
         }
-    }
+    }*/
 
     //-------------------------------------------------------------------------//
 
@@ -195,9 +268,10 @@ int main(int argc, char * const argv[]) {
         printf("\nFinished!\n");
 
         if (!silent) {
-            printf("\n#<i>: <score> (<query start>, <target start>) (<query end>, <target end>)\n");
+            //printf("\n#<i>: <score> (<query start>, <target start>) (<query end>, <target end>)\n");
             for (int i = 0; i < dbLength; i++) {
-                printf("#%d: %d", dbTotalLength - dbLength + i, results[i]->score);
+				printf("#%d:", dbTotalLength - dbLength + i);//printf("#%d: %d", dbTotalLength - dbLength + i, results[i]->score);
+				/*
                 if (results[i]->startLocationQuery >= 0) {
                     printf(" (%d, %d)", results[i]->startLocationQuery, results[i]->startLocationTarget);
                 } else {
@@ -207,11 +281,11 @@ int main(int argc, char * const argv[]) {
                     printf(" (%d, %d)", results[i]->endLocationQuery, results[i]->endLocationTarget);
                 } else {
                     printf(" (?, ?)");
-                }
+                }*/
                 printf("\n");
 
                 if (results[i]->alignment) {
-                    printAlignment(query, queryLength, db[i], dbSeqLengths[i], *results[i], alphabet);
+                    printAlignment(query, queryLength, db[i], dbSeqLengths[i], *results[i], alphabet, indexes, i);
                 }
             }
         }
@@ -228,7 +302,7 @@ int main(int argc, char * const argv[]) {
         delete dbSequences;
     }
 
-    printf("\nCpu time of searching: %.2lf\n", cpuTime);
+    printf("\nCpu time of searching: %.6lf\n", cpuTime);
     if (searchType != OPAL_SEARCH_ALIGNMENT) {
         printf("GCUPS (giga cell updates per second): %.2lf\n",
                dbTotalNumResidues / 1000000000.0 * queryLength / cpuTime);
@@ -297,7 +371,6 @@ bool readFastaSequences(FILE* &file, unsigned char* alphabet, int alphabetLength
                     }
 
                     seqs->back().push_back(letterIdx[c]);
-					cout << c;
 					
                 }
             }
@@ -307,13 +380,11 @@ bool readFastaSequences(FILE* &file, unsigned char* alphabet, int alphabetLength
     return true;
 }
 
-
 void printAlignment(const unsigned char* query, const int queryLength,
                     const unsigned char* target, const int targetLength,
-                    const OpalSearchResult result, const unsigned char* alphabet) {
+                    const OpalSearchResult result, const unsigned char* alphabet, vector<int> indexes, int i) {
     int tIdx = result.startLocationTarget;
     int qIdx = result.startLocationQuery;
-
     for (int start = 0; start < result.alignmentLength; start += 50) {
         // target
         printf("T: ");
@@ -324,7 +395,9 @@ void printAlignment(const unsigned char* query, const int queryLength,
             else
                 printf("%c", alphabet[target[tIdx++]]);
         }
-        printf(" (%d - %d)\n", max(startTIdx, 0), tIdx - 1);
+        //printf(" (%d - %d)\n", max(startTIdx, 0), tIdx - 1);
+		printf("\n");
+
         // query
         printf("Q: ");
         int startQIdx = qIdx;
@@ -334,6 +407,6 @@ void printAlignment(const unsigned char* query, const int queryLength,
             else
                 printf("%c", alphabet[query[qIdx++]]);
         }
-        printf(" (%d - %d)\n\n", max(startQIdx, 0), qIdx - 1);
+        printf(" (%d - %d)\n\n", max(startQIdx, 0) + indexes.at(i), qIdx - 1 + indexes.at(i));
     }
 }

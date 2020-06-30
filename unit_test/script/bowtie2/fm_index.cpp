@@ -36,12 +36,23 @@ void print_result(Aligner& a, string& str, vector<string>& querys)
         cout<<v.size()<<endl;
         for(int i: v)
 		{
-            cout<<i<<": "<<str.substr(i, q.length() + 1)<<endl;
+			if ((i - q.length() + 1) > 0)
+			{
+				cout<<i<<": "<<str.substr(i - q.length() + 1, 2 * q.length()-1)<<endl;				
+			}else
+			{
+				cout<<i<<": "<<str.substr(i, q.length())<<endl;								
+			}			
 			if (v.size()>0)
 			{
 				fasta_database_file << ">" << i << "\n";
-				fasta_database_file <<str.substr(i, q.length() + 1) <<"\n";
-			}
+				if ((i - q.length() + 1) > 0)
+				{
+					fasta_database_file <<str.substr(i - q.length() + 1, 2 * q.length()-1) <<"\n";					
+				}else
+				{
+					fasta_database_file <<str.substr(i, q.length()) <<"\n";					
+				}			}
 		}
         cout<<endl;
     }
