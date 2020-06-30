@@ -129,13 +129,11 @@ int main(int argc, char * const argv[])
 	fasta_query_file.close();
 
     int c = 0;
-
+	vector<int> sa(str.size());
     while(getline(ifs, str))
     {
-        cout<<"*************************************"<<endl;
         cout<<str<<endl;
-
-        str.push_back(0);
+		str.push_back(0);
         Aligner a(str);
         vector<string> querys;
 		
@@ -144,7 +142,6 @@ int main(int argc, char * const argv[])
 		querys.push_back(reverse);
 
         auto v = string_to_vector(str);
-        auto sa = DC3(v);
 
         indexes = print_result(a, str, querys);
     }	

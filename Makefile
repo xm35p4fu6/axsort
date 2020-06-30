@@ -5,7 +5,8 @@ source_library = ../unit_test/script
 bowtie2_library = ../unit_test/script/bowtie2
 simd_library = ../include/AXSORT/aligner
 
-Cflag= -Wall -std=c++17 -I $(include_dirs) $(link_library)
+Cflag = -Wall -std=c++2a -I $(include_dirs) $(link_library) -g
+Cflag_O2 = -Wall -std=c++2a -I $(include_dirs) $(link_library) -O2
 CC = g++-10
 
 CXXFLAGS = -std=c++11 -march=native -Wall -I $(include_dirs) $(link_library)
@@ -44,7 +45,7 @@ seed_extraction: $(bowtie2_library)/seed_extraction.cpp
 # TARGET fm_index
 # ALI
 fm_index: $(bowtie2_library)/fm_index.cpp
-	g++ $< $(Cflag) -o $@
+	$(CC) $(bowtie2_library)/$@.cpp $(Cflag) -o $@
 
 # TARGERT simd_aligner
 # ALI

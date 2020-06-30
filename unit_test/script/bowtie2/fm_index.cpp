@@ -2,10 +2,14 @@
 #include <AXSORT/aligner/seeds.hpp>
 #include <AXSORT/test/gtest.hpp>
 #include <AXSORT/test/data_dir.hpp>
+#include <AXSORT/string_sorter/sais.hpp>
 
-#include <fstream>
-#include <string>
 #include <iostream>
+#include <string_view>
+#include <numeric>
+#include <vector>
+#include <iterator>
+#include <iomanip>
 
 using namespace std;
 
@@ -93,6 +97,32 @@ vector<int> query(vector<int>& SA, string& str, string& q)
     return res;
 }
 
+template<typename T>
+void get_strings(T& strs)
+{
+    {
+        std::ifstream fin(sequence());
+        assert(fin.is_open());
+        std::copy(std::istream_iterator<std::string>(fin), 
+                std::istream_iterator<std::string>(),
+                std::back_inserter(strs));
+    }
+}
+
+template<typename T1, typename T2>
+void get_result(T1& strs, T2& ress)
+{
+    AXSORT::string_sorter::sais sorter;
+    ress.resize(strs.size());
+    for(size_t i=0; i<strs.size(); ++i)
+    {
+        ress[i].resize(strs[i].size());
+        sorter.sort(strs[i], ress[i]);
+    }
+}
+
+std::vector<std::string> strs;
+std::vector<std::vector<uint32_t>> anss, ress;
 
 TEST(BWT, check_reverse)
 {
@@ -109,13 +139,20 @@ TEST(BWT, check_reverse)
 	fasta_query_file << read << "\n";
 
     int c = 0;
-
+	vector<int> sa(str.size());
     while(getline(ifs, str))
     {
-        cout<<"**************** CASE "<<c++<<" *********************"<<endl;
         cout<<str<<endl;
-
-        str.push_back(0);
+		
+		get_strings(strs);
+		get_result(strs, ress);
+		
+		for (int i = 0; i < ress.size(); i++) { 
+			for (int j = 0; j < ress[i].size(); j++){
+				sa.push_back(ress[i][j]);
+			}
+		} 
+		
         Aligner a(str);
         vector<string> querys;
 		
@@ -124,7 +161,6 @@ TEST(BWT, check_reverse)
 		querys.push_back(reverse);
 
         auto v = string_to_vector(str);
-        auto sa = DC3(v);
 
         for(auto q: querys)
         {
