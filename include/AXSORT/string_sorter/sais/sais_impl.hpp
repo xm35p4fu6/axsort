@@ -8,17 +8,22 @@
 #include <algorithm>
 #include "../config.hpp"
 
-namespace AXSORT :: string_sorter :: sais_impl {
+
+namespace AXSORT :: string_sorter {
+
+namespace sais_impl_utilities {
+enum Direction { backward, forward };
+enum Induce { induceL, induceS };
+enum Target { suffix, LMS };
+}
+
+namespace sais_impl {
+using namespace sais_impl_utilities;
 
 const bool show_function = false;
 
 template<typename SEQ, typename RES, typename CFG_>
 void sa_is(SEQ&&, RES&&, CFG_&&);
-
-
-enum Direction { backward, forward };
-enum Induce { induceL, induceS };
-enum Target { suffix, LMS };
 
 template<typename SEQ, typename ISL, typename CFG>
 inline void cal_LS_type(SEQ&&, ISL&&, CFG&&);
@@ -424,6 +429,7 @@ inline void recursive_call_sais(RES&& res, ISL&& is_L
 }
 
 }   // sais_impl
+}
 
 /*
     // induce_sort

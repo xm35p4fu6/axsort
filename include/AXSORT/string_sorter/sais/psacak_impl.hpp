@@ -1,30 +1,22 @@
-#pragma once
-#include <numeric>
-#include <vector>
-#include <array>
-#include <limits>
-#include <span>
-#include <ranges>
 #include <algorithm>
 #include "../config.hpp"
-#include "sais_impl.hpp"
+#include "sacak_impl.hpp"
 
-namespace AXSORT :: string_sorter :: sacak_impl {
+namespace AXSORT :: string_sorter :: psacak_impl {
 using namespace sais_impl_utilities;
 
-const bool show_function = false;
 const bool dev_done = false;
+const bool show_function = false;
 
 template<bool Level1 = 1, typename SEQ, typename RES, typename CFG_>
-void saca_k(SEQ&&, RES&&, CFG_&&);
+void psaca_k(SEQ&&, RES&&, CFG_&&);
 
 template <typename SEQ, typename RES, typename BKT
     , typename ISL, typename CFG>
 inline void put_LMSc(SEQ&&, RES&&, BKT&&, ISL&&, CFG&&);
 
-
 template<bool Level1 = 1, typename SEQ, typename RES, typename CFG_>
-void saca_k(SEQ&& seq, RES&& res, CFG_&& cfg) 
+void psaca_k(SEQ&& seq, RES&& res, CFG_&& cfg) 
 {
 if constexpr (dev_done)
 {
@@ -105,7 +97,7 @@ if constexpr (dev_done)
     }
 
     //induce_sort<induceS, suffix>(res, seq, is_L, bkt_ptr, cfg);
-}
+}   // dev_done
 else 
 {
     assert(dev_done == true);
@@ -133,3 +125,4 @@ inline void put_LMSc(
 }
 
 }
+

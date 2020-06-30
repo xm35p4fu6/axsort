@@ -4,6 +4,10 @@
 
 namespace AXSORT :: string_sorter {
 
+    enum class Method
+    {
+        SAIS, SACAK, PSACAK
+    };
     // assertion: open all assert() if true. useful for debug.
     // map2idx(): map the original sequence's character to bucket's index
     // map2val(): reverse of map2idx()
@@ -29,6 +33,7 @@ namespace AXSORT :: string_sorter {
         bkt_idx_t alphabet_size = 
             std::numeric_limits<seq_val_t>::max();
         seq_idx_t sequence_length = 0;
+        Method method = Method::SAIS;
     };
 
 }
