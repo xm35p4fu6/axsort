@@ -3,8 +3,12 @@
 #include "sais/psacak_impl.hpp"
 #include "sais/sacak_impl.hpp"
 #include "config.hpp"
+#include <stdexcept>
 
 namespace AXSORT :: string_sorter {
+
+const char* _invalid_method = 
+    "sorting algorithm doesn't in AXSORT::string_sorter::Method";
 
 struct sais
 {
@@ -25,6 +29,9 @@ struct sais
                 break;
             case Method::PSACAK:
                 psacak_impl::psaca_k(seq, res, cfg);
+                break;
+            default:
+                throw std::invalid_argument( _invalid_method );
                 break;
         }
     }
