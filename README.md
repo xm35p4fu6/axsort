@@ -1,5 +1,11 @@
 # AXSORT
 
+AXSORT is a modern C++ version implementation of [pSACA-k(Fast-inplace-sorting-on-a-multicore-computer)](https://ieeexplore.ieee.org/document/8371211).
+
+For now, it's just finish SAIS and SACA-k and a part of pSACA-k. (and this semester end...)
+
+I will finish it someday!
+
 > install boost
 ``` sudo apt-get install libboost-all-dev ```
 
